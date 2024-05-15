@@ -1,3 +1,5 @@
+![Pennywise Image](core/static/core/pennywiser.png)
+
 # PennyWiser
 
 ## Table of Contents
