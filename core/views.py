@@ -259,14 +259,6 @@ def new_transaction(request):
         installments = request.POST["installments"]
         company = Company.objects.get(id=request.session["company_id"])
 
-        print(amount)
-        print(payment_info)
-        print(description)
-        print(replicate)
-        print(has_installments)
-        print(installments)
-        print(company)
-
         if has_installments and int(installments) > 12 and replicate != "O":
             error = "Transactions with more than 12 installments can't replicate."
         elif has_installments:
@@ -490,9 +482,9 @@ def edit(request):
         transaction = Transaction.objects.get(id=request.POST["transaction_id"])
 
     if (transaction.category.type == "E"):
-        categories = Category.objects.filter(type="E").order_by("name")
+        categories = Category.objects.filter(type="E", company= request.session["company_id"]).order_by("name")
     else:
-        categories = Category.objects.filter(type="I").order_by("name")
+        categories = Category.objects.filter(type="I", company= request.session["company_id"]).order_by("name")
         
     if request.method == "POST" and request.POST["edit"] == "copy_transaction":
         today = datetime.today().date()
@@ -698,10 +690,8 @@ def settings(request):
             new_account = request.POST["new_account"].title()
             starting_balance = float(request.POST["starting_balance"])
             account = Account(name=new_account, balance=starting_balance, company=company)
-            account_monthly_balance = MonthlyAccountBalance(account=account, balance=starting_balance, month_year=datetime.today().date().replace(day=1))
             try:
                 account.save()
-                account_monthly_balance.save()
                 message = "New account saved."
             except IntegrityError:
                 error = "Account name unavailable."
@@ -721,7 +711,13 @@ def settings(request):
             company_user = CompanyUser(user=request.user, company=company)
             company_user.save()
 
-            # Create a database date stores for replicating purposes
+            # Create basic transfer categories to be used in any company
+            transfer_out_category = Category(name="Transfer Out", type="E", company=company)
+            transfer_in_category = Category(name="Transfer In", type="I", company=company)
+            transfer_out_category.save()
+            transfer_in_category.save()
+
+            # Create a database date stored for replicating purposes
             timer = Timer(db_date=datetime.today().date(), company=company)
             timer.save()
             companies = request.session["companies"]
