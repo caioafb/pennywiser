@@ -475,16 +475,21 @@ def edit(request):
         return render(request, "core/archive.html", {
             "message": message
         })
-    
+        
     try:
         transaction = Transaction.objects.get(id=request.GET.get("transaction_id"))
     except:
         transaction = Transaction.objects.get(id=request.POST["transaction_id"])
 
+    if transaction.company.id != request.session["company_id"]:
+        return render(request, "core/archive.html", {
+            "error": "Access denied."
+        })
+
     if (transaction.category.type == "E"):
-        categories = Category.objects.filter(type="E", company= request.session["company_id"]).order_by("name")
+        categories = Category.objects.filter(type="E", company=request.session["company_id"]).order_by("name")
     else:
-        categories = Category.objects.filter(type="I", company= request.session["company_id"]).order_by("name")
+        categories = Category.objects.filter(type="I", company=request.session["company_id"]).order_by("name")
         
     if request.method == "POST" and request.POST["edit"] == "copy_transaction":
         today = datetime.today().date()
