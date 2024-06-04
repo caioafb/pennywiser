@@ -1,5 +1,3 @@
-Can you improve a readme.md file that I did for my CS50's Web Programming with Python? Here it goes:
-
 ![Pennywise Image](core/static/core/pennywiser.png)
 
 # PennyWiser
@@ -133,4 +131,30 @@ All HTML templates created for this project are stored in this folder.
 - **settings.html**: Page for creating new companies, categories, or accounts.
 
 ## Distinctiveness and Complexity
-PennyWiser distinguishes itself by providing tailored financial solutions for tracking expenses, incomes, and accounts, specifically for small businesses. Its focus on financial control, categorization, and reporting sets it apart as a specialized tool for business owners. The project exhibits complexity beyond typical course projects in areas such as transaction handling, recurring transactions, and comprehensive reporting, requiring intricate backend logic, database management, and data aggregation processes.
+
+### Distinctiveness:
+
+- **Targeted Audience:** PennyWiser is purpose-built for small business owners seeking efficient financial management tools. Unlike generic personal finance apps, PennyWiser caters to the unique needs of businesses, including tracking accounts payable and receivable, budget projection, cash flow analysis, and transaction automation.
+
+- **Specialized Features:**
+  - **Categorization:** PennyWiser intelligently categorizes transactions, providing an overview of spending and income by category. This feature allows users to quickly identify trends and make informed financial decisions.
+  - **Recurring Transactions:** Handling recurring payments (e.g., monthly bills, subscriptions) is crucial for businesses. PennyWiser streamlines this process, ensuring accurate tracking and timely replication.
+  - **Comprehensive Reporting:** PennyWiser generates summaries showing an overview of the company's financial health, current and future, in addition to account reports resembling bank statements for all accounts. Users can easily check balances, view historical data, and analyze financial health.
+
+- **Design and Usability:**
+  - **Intuitive Interface:** PennyWiser boasts a clean and intuitive user interface, prioritizing usability to make it easy for business owners to navigate and manage their finances.
+  - **Mobile-Responsive:** Whether accessed from a desktop or a smartphone, PennyWiser adapts seamlessly to different screen sizes.
+
+- **Technological Choices:**
+  - **Django:** The backend leverages Django, allowing for robust data modeling, efficient database queries, and secure authentication.
+  - **Bootstrap and JavaScript:** The frontend utilizes Bootstrap for responsive styling and JavaScript for interactive features.
+
+### Complexity:
+
+- **Data Models:** PennyWiser’s data models include entities such as accounts, companies, transactions, and categories. Managing relationships between these models required thoughtful design and efficient querying.
+
+- **Business Logic:** Calculating balances, projecting budgets, and handling recurring transactions involve intricate business logic. PennyWiser’s backend processes ensure accuracy and reliability.
+
+- **Front-End Interactivity:** JavaScript enhances user interactions. Dynamic forms, real-time updates, interactive charts, and fluid animations contribute to a seamless experience.
+
+- **Testing and Debugging:** Rigorous testing was essential to ensure data consistency, error handling, and responsiveness across devices.
