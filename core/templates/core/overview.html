@@ -142,6 +142,7 @@
                                                 - {{ transaction.current_installment }}/{{ transaction.installments }}
                                             {% endif %}
                                         </td>
+                                        <td>{{ transaction.due_date|date:"M d" }}</td>
                                         <td>{{ transaction.amount|floatformat:2 }}</td>
                                     </tr>
                                 {% endfor %}
@@ -154,6 +155,7 @@
                                                 - {{ transaction.current_installment }}/{{ transaction.installments }}
                                             {% endif %}
                                         </td>
+                                        <td>{{ transaction.due_date|date:"M d" }}</td>
                                         <td>{{ transaction.amount|floatformat:2 }}</td>
                                     </tr>
                                 {% endfor %}
@@ -183,6 +185,7 @@
                                                 - {{ transaction.current_installment }}/{{ transaction.installments }}
                                             {% endif %}
                                         </td>
+                                        <td>{{ transaction.due_date|date:"M d" }}</td>
                                         <td>{{ transaction.amount|floatformat:2 }}</td>
                                     </tr>
                                 {% endfor %}
@@ -195,6 +198,7 @@
                                                 - {{ transaction.current_installment }}/{{ transaction.installments }}
                                             {% endif %}
                                         </td>
+                                        <td>{{ transaction.due_date|date:"M d" }}</td>
                                         <td>{{ transaction.amount|floatformat:2 }}</td>
                                     </tr>
                                 {% endfor %}

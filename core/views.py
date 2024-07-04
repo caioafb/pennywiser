@@ -577,7 +577,7 @@ def overview(request):
         projected_expense_data = []
         projected_income_data = []
         for category in expense_categories:
-            transactions = Transaction.objects.filter(category=category, settle_date__gte=date, settle_date__lte=end_of_month)
+            transactions = Transaction.objects.filter(category=category, settle_date__gte=date, settle_date__lte=end_of_month).order_by("-amount")
             category_amount = transactions.aggregate(Sum("amount"))["amount__sum"] or 0
             if category_amount:
                 data = {}
@@ -590,11 +590,11 @@ def overview(request):
 
             if date >= current_month:
                 if date > current_month:
-                    projected_transactions = Transaction.objects.filter(category=category, due_date__gte=date, due_date__lte=end_of_month, settle_date__isnull=True)
+                    projected_transactions = Transaction.objects.filter(category=category, due_date__gte=date, due_date__lte=end_of_month, settle_date__isnull=True).order_by("due_date")
                     projected_category_amount = projected_transactions.aggregate(Sum("amount"))["amount__sum"] or 0
                     projected_category_amount = projected_category_amount
                 else:
-                    projected_transactions = Transaction.objects.filter(category=category, due_date__lte=end_of_month, settle_date__isnull=True)
+                    projected_transactions = Transaction.objects.filter(category=category, due_date__lte=end_of_month, settle_date__isnull=True).order_by("due_date")
                     projected_category_amount = projected_transactions.aggregate(Sum("amount"))["amount__sum"] or 0
                     projected_category_amount = projected_category_amount + category_amount
 
@@ -610,7 +610,7 @@ def overview(request):
                     projected_expense_data.append(projected_data)
             
         for category in income_categories:
-            transactions = Transaction.objects.filter(category=category, settle_date__gte=date, settle_date__lte=end_of_month)
+            transactions = Transaction.objects.filter(category=category, settle_date__gte=date, settle_date__lte=end_of_month).order_by("-amount")
             category_amount = transactions.aggregate(Sum("amount"))["amount__sum"] or 0
             if category_amount:
                 data = {}
@@ -623,11 +623,11 @@ def overview(request):
 
             if date >= current_month:
                 if date > current_month:
-                    projected_transactions = Transaction.objects.filter(category=category, due_date__gte=date, due_date__lte=end_of_month, settle_date__isnull=True)
+                    projected_transactions = Transaction.objects.filter(category=category, due_date__gte=date, due_date__lte=end_of_month, settle_date__isnull=True).order_by("due_date")
                     projected_category_amount = projected_transactions.aggregate(Sum("amount"))["amount__sum"] or 0
                     projected_category_amount = projected_category_amount
                 else:
-                    projected_transactions = Transaction.objects.filter(category=category, due_date__lte=end_of_month, settle_date__isnull=True)
+                    projected_transactions = Transaction.objects.filter(category=category, due_date__lte=end_of_month, settle_date__isnull=True).order_by("due_date")
                     projected_category_amount = projected_transactions.aggregate(Sum("amount"))["amount__sum"] or 0
                     projected_category_amount = projected_category_amount + category_amount
                 if projected_category_amount:
