@@ -172,7 +172,8 @@ def index(request):
             if transaction.category.type == "I":
                 came_from_income = True
 
-        if account:
+        # Added not transaction.settle_date as a server fail safe to double settlings when server is slow or the user refreshes the page
+        if account and not transaction.settle_date:
             # Update transaction with settle information
             transaction.settle_description = settle_description
             transaction.amount = amount
@@ -391,6 +392,7 @@ def edit(request):
                     next_transaction.description = transaction.description
                     next_transaction.payment_info = transaction.payment_info
                     next_transaction.amount = transaction.amount
+                    next_transaction.category = transaction.category
                     next_transaction.save()
                     count = count + 1
 
