@@ -3,16 +3,65 @@
 {% block body %}
 
     <div class="forms">
-        <h2>New Transaction</h2>
-
-        {% if message %}
-            <div id="message" class="alert alert-success">{{ message }}</div>
-        {% elif error %}
-            <div id="message" class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-        
         <form action="{% url 'new_transaction' %}" id="transaction_form" method="post">
             {% csrf_token %}
+            <h2 class="form-check-inline">New Transaction</h2>
+            <div class="form-check-inline float-end mt-2">
+                <label class="form-check-label" for="settle">Settle</label>
+                <input class="form-check-input" type="checkbox" value=True id="settle" name="settle" onchange="showSettle(this)">
+            </div>
+            <div class="form-check-inline float-end mt-2">
+                <label class="form-check-label" for="transfer">Transfer</label>
+                <input class="form-check-input" type="checkbox" value=True id="transfer" name="transfer" onchange="showTransfer(this)">
+            </div>
+            {% if message %}
+                <div id="message" class="alert alert-success">{{ message }}</div>
+            {% endif %}
+            {% if error %}
+                <div id="message" class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+        
+            <!-- Hidden transfer box -->
+            <div id="transfer-box" style="display:none">
+                <div class="form-floating mb-3">
+                    <select class="form-control" name="from" id="from" required>    
+                        <option value="none" selected="selected" disabled style="display: none"></option>
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% empty %}
+                            <option value="none" disabled>No accounts yet.</option>
+                        {% endfor %}
+                    </select>
+                    <label for="from">From</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-control" name="to" id="to" required>    
+                        <option value="none" selected="selected" disabled style="display: none"></option>
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% empty %}
+                            <option value="none" disabled>No accounts yet.</option>
+                        {% endfor %}
+                    </select>
+                    <label for="to">To</label>
+                </div>
+                <hr style="height: 2px;">
+            </div>
+            <!-- Hidden settle box -->
+            <div id="settle-box" style="display:none">
+                <div class="form-floating mb-3">
+                    <select class="form-control" name="account_id" id="account_id">    
+                        <option value="none" selected="selected" disabled style="display: none"></option>
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% empty %}
+                            <option value="none" disabled>No accounts yet.</option>
+                        {% endfor %}
+                    </select>
+                    <label for="account_id">Settle account</label>
+                </div>
+                <hr style="height: 2px;">
+            </div>
             <div class="form-floating mb-3">
                 <input class="form-control" autocomplete="off" id="due_date" name="due_date" type="date" value="{{ today|date:"Y-m-d" }}">
                 <label for="due_date">Due date</label>
@@ -46,7 +95,7 @@
             {% else %}
                 <div class="form-floating mb-3">
                     <select class="form-control" name="category" id="category" required>
-                        <option value="none" selected disabled>Choose category</option>
+                        <option value="none" selected="selected" disabled style="display: none"></option>
                         <option value="none" disabled>-- Expense --</option>
                         {% for category in expense_categories %}
                             <option value="{{ category.id }}">{{ category.name }}</option>

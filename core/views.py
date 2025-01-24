@@ -11,6 +11,70 @@ from django.db.models import Sum, Q
 
 from .models import User, Company, CompanyUser, Category, Account, Transaction, MonthlyAccountBalance, Timer
 
+# Transfer equals "F"(from) if it's the sending account, "T"(to) if it's the receiving account, None if it's a regular settle
+def settle(transaction, request, transfer):
+    message = None
+    error = None
+    came_from_income = False
+    amount = request.POST["amount"]
+    
+    try:
+        if transfer == "F":
+            account = Account.objects.get(id=request.POST["from"])
+        elif transfer == "T":
+            account = Account.objects.get(id=request.POST["to"])
+        else:
+            account = Account.objects.get(id=request.POST["account_id"])
+    except:
+        account = None
+        error = "Must select an account."
+        if transaction.category.type == "I":
+            came_from_income = True
+
+    try:
+        settle_description = request.POST["settle_description"]
+    except:
+        settle_description = ""
+
+    # If it has not settle date, it means that it came from the settle check box on the new transaction page
+    try:
+        settle_date = request.POST["settle_date"]
+    except:
+        settle_date = request.POST["due_date"]
+
+        # Added not transaction.settle_date as a server fail safe to double settlings when server is slow or the user refreshes the page
+    if account and not transaction.settle_date:
+        # Update transaction with settle information
+
+        transaction.settle_description = settle_description
+        transaction.amount = amount
+        transaction.settle_date = settle_date
+        transaction.settle_user = request.user
+        transaction.settle_account = account
+        transaction.save()
+
+        date = datetime.strptime(settle_date, "%Y-%m-%d").replace(day=1).date()
+        # Try to get an instance of the account's monthly balance, creates one if it doesn't exist
+        try:
+            monthly_balance = MonthlyAccountBalance.objects.get(account=account, month_year=date)
+        except:
+            monthly_balance = MonthlyAccountBalance(account=account, month_year=date)
+
+        # Update account balance
+        if transaction.category.type == "E":
+            account.balance = float(account.balance) - float(amount)
+            monthly_balance.balance = float(monthly_balance.balance) - float(amount)
+        else:
+            account.balance = float(account.balance) + float(amount)
+            monthly_balance.balance = float(monthly_balance.balance) + float(amount)
+            came_from_income = True
+
+        account.save()
+        monthly_balance.save()
+        message = "Transaction settled successfully."
+        
+    return {"message":message, "error":error, "came_from_income":came_from_income}
+
 
 def register(request):
     if request.method == "POST":
@@ -159,48 +223,11 @@ def index(request):
     # By default the page loads on the expenses tab, this variable changes to the income tab if a form was sent from income
     came_from_income = False 
     if request.method == "POST":
-        settle_description = request.POST["settle_description"]
-        amount = request.POST["amount"]
-        settle_date = request.POST["settle_date"]
-        transaction_id = request.POST["transaction_id"]
-        transaction = Transaction.objects.get(id=transaction_id)
-        try:
-            account = Account.objects.get(id=request.POST["account_id"])
-        except:
-            account = None
-            error = "Must select an account."
-            if transaction.category.type == "I":
-                came_from_income = True
-
-        # Added not transaction.settle_date as a server fail safe to double settlings when server is slow or the user refreshes the page
-        if account and not transaction.settle_date:
-            # Update transaction with settle information
-            transaction.settle_description = settle_description
-            transaction.amount = amount
-            transaction.settle_date = settle_date
-            transaction.settle_user = request.user
-            transaction.settle_account = account
-            transaction.save()
-
-            date = datetime.strptime(settle_date, "%Y-%m-%d").replace(day=1).date()
-            # Try to get an instance of the account's monthly balance, creates one if it doesn't exist
-            try:
-                monthly_balance = MonthlyAccountBalance.objects.get(account=account, month_year=date)
-            except:
-                monthly_balance = MonthlyAccountBalance(account=account, month_year=date)
-
-            # Update account balance
-            if transaction.category.type == "E":
-                account.balance = float(account.balance) - float(amount)
-                monthly_balance.balance = float(monthly_balance.balance) - float(amount)
-            else:
-                account.balance = float(account.balance) + float(amount)
-                monthly_balance.balance = float(monthly_balance.balance) + float(amount)
-                came_from_income = True
-
-            account.save()
-            monthly_balance.save()
-            message = "Transaction settled successfully."
+        transaction = Transaction.objects.get(id=request.POST["transaction_id"])
+        ret = settle(transaction, request, False)
+        message = ret["message"]
+        error = ret["error"]
+        came_from_income = ret["came_from_income"]
 
     accounts = Account.objects.filter(company=request.session["company_id"])
     upcoming = today + timedelta(10)
@@ -241,17 +268,12 @@ def index(request):
 def new_transaction(request):
     expense_categories = Category.objects.filter(type="E", company=request.session["company_id"]).order_by("name")
     income_categories = Category.objects.filter(type="I", company=request.session["company_id"]).order_by("name")
+    accounts = Account.objects.filter(company=request.session["company_id"])
     message = None
     error = None
 
     if request.method == "POST":
-
         due_date = datetime.strptime(request.POST["due_date"], "%Y-%m-%d").date()
-        try:
-            category = Category.objects.get(id=request.POST["category"])
-        except:
-            return render(request, "core/new_transaction.html", {"expense_categories": expense_categories, "income_categories": income_categories, "error":"Must choose category."})
-
         amount = float(request.POST["amount"])
         payment_info = request.POST["payment_info"]
         description = request.POST["description"]
@@ -259,24 +281,47 @@ def new_transaction(request):
         has_installments = request.POST.get("has_installments", False)
         installments = request.POST["installments"]
         company = Company.objects.get(id=request.session["company_id"])
-
-        if has_installments and int(installments) > 12 and replicate != "O":
-            error = "Transactions with more than 12 installments can't replicate."
-        elif has_installments:
-            for n in range(int(installments)):
-                transaction = Transaction(company=company, user=request.user, due_date=due_date + relativedelta(months=n), category=category, amount=amount,
-                                          payment_info=payment_info, description=description, replicate=replicate, installments=installments, current_installment=int(n)+1)
+        is_settle = request.POST.get("settle", False)
+        is_transfer = request.POST.get("transfer", False)
+        if not is_transfer:
+            try:
+                category = Category.objects.get(id=request.POST["category"])
+            except:
+                return render(request, "core/new_transaction.html", {"expense_categories": expense_categories, "income_categories": income_categories, "accounts": accounts, "error":"Must choose category."})
+            
+            if has_installments and int(installments) > 12 and replicate != "O":
+                error = "Transactions with more than 12 installments can't replicate."
+            elif has_installments:
+                for n in range(int(installments)):
+                    transaction = Transaction(company=company, user=request.user, due_date=due_date + relativedelta(months=n), category=category, amount=amount,
+                                            payment_info=payment_info, description=description, replicate=replicate, installments=installments, current_installment=int(n)+1)
+                    transaction.save()
+            else:
+                transaction = Transaction(company=company, user=request.user, due_date=due_date, category=category,
+                                        amount=amount, payment_info=payment_info, description=description, replicate=replicate)
                 transaction.save()
-        else:
-            transaction = Transaction(company=company, user=request.user, due_date=due_date, category=category,
-                                      amount=amount, payment_info=payment_info, description=description, replicate=replicate)
-            transaction.save()
+
+        if is_settle:
+            ret = settle(transaction, request, False)
+            error = ret["error"]
+        elif is_transfer:
+            transaction_from = Transaction(company=company, user=request.user, due_date=due_date, category=Category.objects.get(name="Transfer Out", company=company),
+                                        amount=amount, payment_info=payment_info, description=description, replicate=replicate)
+            transaction_to = Transaction(company=company, user=request.user, due_date=due_date, category=Category.objects.get(name="Transfer In", company=company),
+                                        amount=amount, payment_info=payment_info, description=description, replicate=replicate)
+            transaction_from.save()
+            transaction_to.save()
+            ret = settle(transaction_from, request, "F")
+            ret = settle(transaction_to, request, "T")
+            error = ret["error"]
+
         message = "Transaction saved successfully."
 
     today = datetime.today().date()
     return render(request, "core/new_transaction.html", {
         "expense_categories": expense_categories,
         "income_categories": income_categories,
+        "accounts": accounts,
         "today": today,
         "message": message,
         "error": error

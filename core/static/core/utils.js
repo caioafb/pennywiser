@@ -1,6 +1,21 @@
+function showTransfer(el) {
+    transfer_box = document.getElementById("transfer-box");
+    if (el.checked) {
+        transfer_box.style.display = "block";
+    }
+    else {
+        transfer_box.style.display = "none";
+    }
+}
+
 function showInstallments(el) {
     installments_box = document.getElementById("installments");
+    installments_box.style.animationDuration = "0.2s";
+    installments_box.style.animationPlaystate = "paused";
+    installments_box.style.animationFillMode = "forwards";
     if (el.checked) {
+        installments_box.style.animationName = "slide-down";
+        installments_box.style.animationPlaystate = "running";
         installments_box.style.display = "block";
         installments_box.required = true;
         document.getElementById("monthly").setAttribute("disabled", "");
@@ -14,8 +29,12 @@ function showInstallments(el) {
             document.getElementById("yearly").setAttribute("disabled", "");
         }
     } else {
+        installments_box.style.animationName = "slide-up";
+        installments_box.style.animationPlaystate = "running";
+        setTimeout(() => {
+            installments_box.style.display = "none";
+          }, 200)
         installments_box.required = false;
-        document.getElementById("installments").style.display = "none";
         document.getElementById("monthly").removeAttribute("disabled");
         document.getElementById("bimonthly").removeAttribute("disabled");
         document.getElementById("quarterly").removeAttribute("disabled");
@@ -63,6 +82,52 @@ function showMore(id) {
         setTimeout(() => {
             el.style.display = "none";
           }, 200)
+    }
+}
+
+function showTransfer(el) {
+    transfer_box = document.getElementById("transfer-box");
+    transfer_box.style.animationDuration = "0.2s";
+    transfer_box.style.animationPlaystate = "paused";
+    transfer_box.style.animationFillMode = "forwards";
+    settle_checkbox = document.getElementById("settle")
+    if (el.checked) {
+        transfer_box.style.animationName = "slide-down";
+        transfer_box.style.animationPlaystate = "running";
+        transfer_box.style.display = "block";
+        settle_checkbox.disabled = true;
+        document.getElementById("category").setAttribute("disabled", "");
+    }
+    else {
+        transfer_box.style.animationName = "slide-up";
+        transfer_box.style.animationPlaystate = "running";
+        setTimeout(() => {
+            transfer_box.style.display = "none";
+          }, 200)
+          settle_checkbox.disabled = false;
+        document.getElementById("category").removeAttribute("disabled");
+    }
+}
+
+function showSettle(el) {
+    settle_box = document.getElementById("settle-box");
+    settle_box.style.animationDuration = "0.2s";
+    settle_box.style.animationPlaystate = "paused";
+    settle_box.style.animationFillMode = "forwards";
+    transfer_checkbox = document.getElementById("transfer")
+    if (el.checked) {
+        settle_box.style.animationName = "slide-down";
+        settle_box.style.animationPlaystate = "running";
+        settle_box.style.display = "block";
+        transfer_checkbox.disabled = true;
+    }
+    else {
+        settle_box.style.animationName = "slide-up";
+        settle_box.style.animationPlaystate = "running";
+        setTimeout(() => {
+            settle_box.style.display = "none";
+          }, 200)
+        transfer_checkbox.disabled = false;
     }
 }
 
