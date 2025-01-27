@@ -11,6 +11,7 @@ from django.db.models import Sum, Q
 
 from .models import User, Company, CompanyUser, Category, Account, Transaction, MonthlyAccountBalance, Timer
 
+# Settle function created to be used in different views to settle a transaction
 # Transfer equals "F"(from) if it's the sending account, "T"(to) if it's the receiving account, None if it's a regular settle
 def settle(transaction, request, transfer):
     message = None
@@ -230,7 +231,7 @@ def index(request):
         came_from_income = ret["came_from_income"]
 
     accounts = Account.objects.filter(company=request.session["company_id"])
-    upcoming = today + timedelta(10)
+    upcoming = today + timedelta(15)
     todays_expenses = Transaction.objects.filter(category__type="E", due_date__lte=today, company=request.session["company_id"], settle_date__isnull=True).order_by("due_date")
     todays_expenses_total = todays_expenses.aggregate(Sum("amount"))["amount__sum"]
     upcoming_expenses = Transaction.objects.filter(category__type="E", due_date__range=(today+timedelta(1), upcoming), company=request.session["company_id"], settle_date__isnull=True).order_by("due_date")
@@ -540,7 +541,9 @@ def edit(request):
         
     if request.method == "POST" and request.POST["edit"] == "copy_transaction":
         today = datetime.today().date()
+        accounts = Account.objects.filter(company=request.session["company_id"]).order_by("name")
         return render(request, "core/new_transaction.html", {
+            "accounts": accounts,
             "transaction": transaction,
             "categories": categories,
             "today": today
