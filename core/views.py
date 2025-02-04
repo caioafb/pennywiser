@@ -359,7 +359,7 @@ def archive(request):
                 search_data = search_data.filter(settle_date__lte=to_date)
             search_data = search_data.order_by("-settle_date")
 
-        data_paginator = Paginator(search_data, 10)
+        data_paginator = Paginator(search_data, 15)
         try:
             page_num = request.POST['page']
         except:
