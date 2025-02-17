@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -75,6 +75,50 @@ def settle(transaction, request, transfer):
         message = "Transaction settled successfully."
         
     return {"message":message, "error":error, "came_from_income":came_from_income}
+
+# Replicate function for copy transaction and replicate to the next due_date, forced variable was created to force replication before transaction expired
+def replicate(transaction, forced):
+    today = datetime.today().date()
+    if transaction.replicate == "M":
+        months = 1
+    elif transaction.replicate == "B":
+        months = 2
+    elif transaction.replicate == "Q":
+        months = 3
+    elif transaction. replicate == "Y":
+        months = 12
+    
+    while transaction.due_date < today or forced:
+        if forced:
+            forced = False
+
+        due_date = transaction.due_date + relativedelta(months=months)
+        new_transaction = Transaction(company=transaction.company, user=transaction.user, due_date=due_date, category=transaction.category, amount=transaction.amount, payment_info=transaction.payment_info,
+                                        description=transaction.description, replicate=transaction.replicate, installments=transaction.installments, current_installment=transaction.current_installment, parent_id=transaction.id)
+        new_transaction.save()
+        # Check if new transaction due_date should be last day of month, comparing with parent's transaction
+        if transaction.is_last_day_of_month() and not new_transaction.is_last_day_of_month():
+            try:
+                parent_transaction = Transaction.objects.get(id=transaction.parent_id)
+            except:
+                parent_transaction = None
+            if parent_transaction:
+                if parent_transaction.is_last_day_of_month():
+                    new_transaction.due_date = new_transaction.due_date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+                    new_transaction.save()
+            else:
+                new_transaction.due_date = new_transaction.due_date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+                new_transaction.save()
+
+        if transaction.replicate == "Y" and transaction.installments:
+            for i in range(2, int(transaction.installments)+1):
+                new_transaction_installments = Transaction(company=transaction.company, user=transaction.user, due_date=new_transaction.due_date + relativedelta(months=i-1), category=transaction.category,
+                                                            amount=transaction.amount, payment_info=transaction.payment_info, description=transaction.description, replicate=transaction.replicate, installments=transaction.installments, current_installment=i)
+                new_transaction_installments.save()
+            
+        transaction.has_replicated = True
+        transaction.save()
+        transaction = new_transaction
 
 
 def register(request):
@@ -180,44 +224,9 @@ def index(request):
         timer.save()
         expired_transactions = Transaction.objects.filter(
             ~Q(replicate="O"), company=request.session["company_id"], due_date__lt=today, has_replicated=False).exclude(current_installment__gt=1)
+        
         for transaction in expired_transactions:
-            if transaction.replicate == "M":
-                months = 1
-            elif transaction.replicate == "B":
-                months = 2
-            elif transaction.replicate == "Q":
-                months = 3
-            elif transaction. replicate == "Y":
-                months = 12
-            
-            while transaction.due_date < today:
-                due_date = transaction.due_date + relativedelta(months=months)
-                new_transaction = Transaction(company=transaction.company, user=transaction.user, due_date=due_date, category=transaction.category, amount=transaction.amount, payment_info=transaction.payment_info,
-                                              description=transaction.description, replicate=transaction.replicate, installments=transaction.installments, current_installment=transaction.current_installment, parent_id=transaction.id)
-                new_transaction.save()
-                # Check if new transaction due_date should be last day of month, comparing with parent's transaction
-                if transaction.is_last_day_of_month() and not new_transaction.is_last_day_of_month():
-                    try:
-                        parent_transaction = Transaction.objects.get(id=transaction.parent_id)
-                    except:
-                        parent_transaction = None
-                    if parent_transaction:
-                        if parent_transaction.is_last_day_of_month():
-                            new_transaction.due_date = new_transaction.due_date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
-                            new_transaction.save()
-                    else:
-                        new_transaction.due_date = new_transaction.due_date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
-                        new_transaction.save()
-
-                if transaction.replicate == "Y" and transaction.installments:
-                    for i in range(2, int(transaction.installments)+1):
-                        new_transaction_installments = Transaction(company=transaction.company, user=transaction.user, due_date=new_transaction.due_date + relativedelta(months=i-1), category=transaction.category,
-                                                                   amount=transaction.amount, payment_info=transaction.payment_info, description=transaction.description, replicate=transaction.replicate, installments=transaction.installments, current_installment=i)
-                        new_transaction_installments.save()
-                    
-                transaction.has_replicated = True
-                transaction.save()
-                transaction = new_transaction
+            replicate(transaction, False)
 
     message = None
     error = None
@@ -264,6 +273,7 @@ def index(request):
         "message": message,
         "error": error
     })
+
 
 @login_required
 def new_transaction(request):
@@ -392,7 +402,7 @@ def edit(request):
     if request.method == "POST" and not request.POST["edit"] == "copy_transaction":
         transaction = Transaction.objects.get(id=request.POST["transaction_id"])
         old_amount = float(transaction.amount)
-
+        
         try:
             account = Account.objects.get(id=request.POST["account"])
         except:
@@ -520,6 +530,10 @@ def edit(request):
             transaction.delete()
             message = "Transaction deleted successfully."
 
+        elif request.POST["edit"] == "replicate":
+            replicate(transaction, True)
+            message = "Transaction replicated successfully."
+
         return render(request, "core/archive.html", {
             "message": message
         })
@@ -548,7 +562,7 @@ def edit(request):
             "categories": categories,
             "today": today
         })
-    print(transaction)
+    
     accounts = Account.objects.filter(company=request.session["company_id"])
     return render(request, "core/edit.html", {
         "transaction": transaction,

@@ -2,17 +2,20 @@
 
 {% block body %}
 
-    <div class="forms">
-        <h2>Edit Transaction</h2>
-
-        {% if message %}
-            <div id="message" class="alert alert-success">{{ message }}</div>
-        {% elif error %}
-            <div id="message" class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-        
+    <div class="forms">      
         <form action="{% url 'edit' %}" id="edit_form" method="post">
             {% csrf_token %}
+            <h2 class="form-check-inline">Edit Transaction</h2>
+            {% if not transaction.has_replicated and not transaction.installments and transaction.replicate != 'O' %}
+                <button class="btn btn-light" name="edit" value="replicate" type="submit">Replicate</button>
+            {% endif %}
+
+            {% if message %}
+                <div id="message" class="alert alert-success">{{ message }}</div>
+            {% elif error %}
+                <div id="message" class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
             <div class="form-floating mb-3">
                 <input class="form-control" autocomplete="off" id="due_date" name="due_date" type="date" value="{{ transaction.due_date|date:"Y-m-d" }}" required>
                 <label for="due_date">Due date</label>

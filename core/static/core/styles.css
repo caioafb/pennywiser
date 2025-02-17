@@ -21,7 +21,7 @@
     display: none;
 }
 
-.btn-primary {
+.btn-primary, .btn-light {
     float: right;
 }
 
