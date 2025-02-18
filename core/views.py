@@ -233,14 +233,24 @@ def index(request):
     # By default the page loads on the expenses tab, this variable changes to the income tab if a form was sent from income
     came_from_income = False 
     if request.method == "POST":
-        transaction = Transaction.objects.get(id=request.POST["transaction_id"])
-        ret = settle(transaction, request, False)
-        message = ret["message"]
-        error = ret["error"]
-        came_from_income = ret["came_from_income"]
+        if request.POST["action"] == "settle":
+            transaction = Transaction.objects.get(id=request.POST["transaction_id"])
+            ret = settle(transaction, request, False)
+            message = ret["message"]
+            error = ret["error"]
+            came_from_income = ret["came_from_income"]
+        elif request.POST["action"] == "update_range":
+            request.session["upcoming_range"] = request.POST["upcoming_range"]
 
+    try:
+        upcoming_range = int(request.session["upcoming_range"])
+    except:
+        upcoming_range = 15
+        request.session["upcoming_range"] = 15
+
+    upcoming_range_iterator = [15,30,45,60]
     accounts = Account.objects.filter(company=request.session["company_id"])
-    upcoming = today + timedelta(15)
+    upcoming = today + timedelta(upcoming_range)
     todays_expenses = Transaction.objects.filter(category__type="E", due_date__lte=today, company=request.session["company_id"], settle_date__isnull=True).order_by("due_date")
     todays_expenses_total = todays_expenses.aggregate(Sum("amount"))["amount__sum"]
     upcoming_expenses = Transaction.objects.filter(category__type="E", due_date__range=(today+timedelta(1), upcoming), company=request.session["company_id"], settle_date__isnull=True).order_by("due_date")
@@ -255,6 +265,8 @@ def index(request):
     settled_incomes_total = settled_incomes.aggregate(Sum("amount"))["amount__sum"]
     
     return render(request, "core/index.html", {
+        "upcoming_range": upcoming_range,
+        "upcoming_range_iterator": upcoming_range_iterator,
         "accounts": accounts,
         "todays_expenses": todays_expenses,
         "todays_expenses_total": todays_expenses_total,

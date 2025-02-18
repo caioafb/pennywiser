@@ -21,7 +21,7 @@
     display: none;
 }
 
-.btn-primary, .btn-light {
+.btn-primary, .btn-light, #upcoming_range {
     float: right;
 }
 

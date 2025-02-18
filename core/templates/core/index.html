@@ -92,6 +92,7 @@
                                     <button class="btn btn-primary" type="submit">Settle</button>
                                 </td>
                                 <input type="hidden" name="transaction_id" value="{{ expense.id }}">
+                                <input type="hidden" name="action" value="settle">
                             </form>
                         </tr>
                     {% empty %}
@@ -146,7 +147,20 @@
                 {% endif %}
             {% endif %}
             <br>
-            <h4>Upcoming</h2>
+            <h4 class="form-check-inline">Upcoming</h4>
+            <form action="{% url 'index' %}" method="post">
+                {% csrf_token %}
+                <select name="upcoming_range" id="upcoming_range" onchange="this.form.submit()">    
+                    {% for i in upcoming_range_iterator %}
+                        {% if upcoming_range == i%}
+                            <option value="{{ i }}" selected>{{i}}</option>
+                        {% else %}
+                            <option value="{{ i }}">{{i}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="action" value="update_range">
+            </form>
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
@@ -207,6 +221,7 @@
                                     <button class="btn btn-primary" type="submit">Settle</button>
                                 </td>
                                 <input type="hidden" name="transaction_id" value="{{ expense.id }}">
+                                <input type="hidden" name="action" value="settle">
                             </form>
                         </tr>
                     {% empty %}
@@ -289,6 +304,7 @@
                                     <button class="btn btn-primary" type="submit">Settle</button>
                                 </td>
                                 <input type="hidden" name="transaction_id" value="{{ income.id }}">
+                                <input type="hidden" name="action" value="settle">
                             </form>
                         </tr>
                     {% empty %}
@@ -343,7 +359,20 @@
                 {% endif %}
             {% endif %}
             <br>
-            <h4>Upcoming</h4>
+            <h4 class="form-check-inline">Upcoming</h4>
+            <form action="{% url 'index' %}" method="post">
+                {% csrf_token %}
+                <select name="upcoming_range" id="upcoming_range" onchange="this.form.submit()">    
+                    {% for i in upcoming_range_iterator %}
+                        {% if upcoming_range == i%}
+                            <option value="{{ i }}" selected>{{i}}</option>
+                        {% else %}
+                            <option value="{{ i }}">{{i}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="action" value="update_range">
+            </form>
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
@@ -402,6 +431,7 @@
                                     <button class="btn btn-primary" type="submit">Settle</button>
                                 </td>
                                 <input type="hidden" name="transaction_id" value="{{ income.id }}">
+                                <input type="hidden" name="action" value="settle">
                             </form>
                         </tr>
                     {% empty %}
