@@ -21,6 +21,8 @@ function showInstallments(el) {
         document.getElementById("monthly").setAttribute("disabled", "");
         document.getElementById("bimonthly").setAttribute("disabled", "");
         document.getElementById("quarterly").setAttribute("disabled", "");
+        document.getElementById("settle").setAttribute("disabled", "");
+        document.getElementById("transfer").setAttribute("disabled", "");
         if (document.getElementById("monthly").checked || document.getElementById("quarterly").checked || document.getElementById("bimonthly").checked) {
             document.getElementById("once").checked = true;
         }
@@ -39,6 +41,8 @@ function showInstallments(el) {
         document.getElementById("bimonthly").removeAttribute("disabled");
         document.getElementById("quarterly").removeAttribute("disabled");
         document.getElementById("yearly").removeAttribute("disabled");
+        document.getElementById("settle").removeAttribute("disabled");
+        document.getElementById("transfer").removeAttribute("disabled");
     }
 }
 
@@ -97,6 +101,12 @@ function showTransfer(el) {
         transfer_box.style.display = "block";
         settle_checkbox.disabled = true;
         document.getElementById("category").setAttribute("disabled", "");
+        document.getElementById("monthly").setAttribute("disabled", "");
+        document.getElementById("bimonthly").setAttribute("disabled", "");
+        document.getElementById("quarterly").setAttribute("disabled", "");
+        document.getElementById("yearly").setAttribute("disabled", "");
+        document.getElementById("once").checked = true;
+        disableInstallment();
     }
     else {
         transfer_box.style.animationName = "slide-up";
@@ -106,6 +116,11 @@ function showTransfer(el) {
           }, 200)
           settle_checkbox.disabled = false;
         document.getElementById("category").removeAttribute("disabled");
+        document.getElementById("monthly").removeAttribute("disabled");
+        document.getElementById("bimonthly").removeAttribute("disabled");
+        document.getElementById("quarterly").removeAttribute("disabled");
+        document.getElementById("yearly").removeAttribute("disabled");
+        enableInstallment();
     }
 }
 
@@ -120,6 +135,12 @@ function showSettle(el) {
         settle_box.style.animationPlaystate = "running";
         settle_box.style.display = "block";
         transfer_checkbox.disabled = true;
+        document.getElementById("monthly").setAttribute("disabled", "");
+        document.getElementById("bimonthly").setAttribute("disabled", "");
+        document.getElementById("quarterly").setAttribute("disabled", "");
+        document.getElementById("yearly").setAttribute("disabled", "");
+        document.getElementById("once").checked = true;
+        disableInstallment();
     }
     else {
         settle_box.style.animationName = "slide-up";
@@ -128,6 +149,11 @@ function showSettle(el) {
             settle_box.style.display = "none";
           }, 200)
         transfer_checkbox.disabled = false;
+        document.getElementById("monthly").removeAttribute("disabled");
+        document.getElementById("bimonthly").removeAttribute("disabled");
+        document.getElementById("quarterly").removeAttribute("disabled");
+        document.getElementById("yearly").removeAttribute("disabled");
+        enableInstallment();
     }
 }
 

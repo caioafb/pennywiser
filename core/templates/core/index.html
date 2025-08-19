@@ -405,7 +405,6 @@
                             <td class="slide-down-button {{ income.id }}" onclick="showMore({{ income.id }})">˅</td>
                         </tr>
                         <tr id="{{ income.id }}" style="display:none">
-                            <td class="settle-description">Settle description:</td>
                             <form action="{% url 'index' %}" method="post">
                                 {% csrf_token %}
                                 <td colspan="2">
