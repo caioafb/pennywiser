@@ -806,6 +806,22 @@ def settings(request):
             request.session["companies"] = companies
             message = "New company saved."
 
+        elif request.POST["option"] == "change_password":
+            current_password = request.POST["current_password"]
+            new_password = request.POST["new_password"]
+            confirmation = request.POST["confirmation"]
+            user = request.user
+            
+            if user.check_password(current_password):
+                if new_password != confirmation:
+                    error = "Passwords must match."
+                else:
+                    user.set_password(new_password)
+                    user.save()
+                    message = "Password changed successfully."
+            else:
+                error = "Incorrect password."
+
     return render(request, "core/settings.html", {
         "message": message,
         "error": error,

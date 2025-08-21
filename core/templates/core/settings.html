@@ -61,6 +61,26 @@
         </form>
         <br><br>
         <hr>
+        <h4>Change password</h4>
+        <form action="{% url 'settings' %}" method="post">
+            {% csrf_token %}
+            <div class="form-floating mb-3">
+                <input class="form-control" autocomplete="off" id="current_password" name="current_password" type="password" required>
+                <label for="new_account">Current password</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input class="form-control" autocomplete="off" id="new_password" name="new_password" type="password" required>
+                <label for="new_account">New password</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input class="form-control" autocomplete="off" id="confirmation" name="confirmation" type="password" required>
+                <label for="new_account">Confirm new password</label>
+            </div>
+            <input type="hidden" name="option" value="change_password">
+            <input class="btn btn-primary" type="submit" value="Save">
+        </form>
+        <br><br>
+        <hr>
 
     </div>
 
