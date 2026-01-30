@@ -263,7 +263,15 @@ def index(request):
     upcoming_incomes_total = upcoming_incomes.aggregate(Sum("amount"))["amount__sum"]
     settled_incomes = Transaction.objects.filter(category__type="I", company=request.session["company_id"], settle_date=today).order_by("due_date")
     settled_incomes_total = settled_incomes.aggregate(Sum("amount"))["amount__sum"]
-    
+
+    # If it's friday, check if any upcoming expenses expires during the weekend
+    has_expired_on_weekend = False
+    if today.weekday() == 4:
+        has_expired_on_weekend = any(
+            obj.due_date in (today + timedelta(days=1), today + timedelta(days=2))
+            for obj in upcoming_expenses
+        )
+            
     return render(request, "core/index.html", {
         "upcoming_range": upcoming_range,
         "upcoming_range_iterator": upcoming_range_iterator,
@@ -280,6 +288,7 @@ def index(request):
         "upcoming_incomes_total": upcoming_incomes_total,
         "settled_incomes": settled_incomes,
         "settled_incomes_total": settled_incomes_total,
+        "has_expired_on_weekend": has_expired_on_weekend,
         "came_from_income": came_from_income,
         "today": today,
         "message": message,

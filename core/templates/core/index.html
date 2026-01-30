@@ -103,7 +103,9 @@
             {% if todays_expenses %}
                 <p class="text-end me-5">Total: <strong>{{ todays_expenses_total|floatformat:2 }}</strong></p>
             {% endif %}
-            <br>
+            {% if has_expired_on_weekend %}
+                <p class="d-flex justify-content-center align-items-center">❗Attention: You have one or more expenses due this weekend. Consider settling them in advance to avoid delays.❗</p>
+            {% endif %}
             {% if settled_expenses %}
                 <h4>Settled</h4>
                 <table class="table table-hover">
